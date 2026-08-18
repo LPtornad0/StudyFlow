@@ -44,7 +44,7 @@ export function TaskComments({ taskId }: { taskId: string }) {
   }
 
   return (
-    <div className="space-y-3 border-t pt-4">
+    <div className="flex h-full flex-col gap-3">
       <h3 className="text-sm font-semibold">Commentaires</h3>
 
       {loading && <LoadingState label="Chargement des commentaires…" />}
@@ -55,7 +55,7 @@ export function TaskComments({ taskId }: { taskId: string }) {
       )}
 
       {!loading && !error && comments.length > 0 && (
-        <ul className="max-h-56 space-y-3 overflow-y-auto pr-1">
+        <ul className="flex-1 space-y-3 overflow-y-auto pr-1" style={{ maxHeight: "22rem" }}>
           {comments.map((comment) => (
             <li key={comment.id} className="rounded-md bg-muted/40 p-2 text-sm">
               <div className="flex items-center justify-between gap-2">
@@ -82,7 +82,7 @@ export function TaskComments({ taskId }: { taskId: string }) {
 
       {submitError && <ErrorState message={submitError} />}
 
-      <form onSubmit={handleSubmit} className="flex items-end gap-2">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-2">
         <label htmlFor="new-comment" className="sr-only">
           Nouveau commentaire
         </label>
@@ -92,9 +92,9 @@ export function TaskComments({ taskId }: { taskId: string }) {
           onChange={(e) => setContent(e.target.value)}
           rows={2}
           placeholder="Écrire un commentaire…"
-          className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
-        <Button type="submit" size="sm" disabled={submitting || !content.trim()}>
+        <Button type="submit" size="sm" className="self-end" disabled={submitting || !content.trim()}>
           {submitting ? "Envoi…" : "Envoyer"}
         </Button>
       </form>

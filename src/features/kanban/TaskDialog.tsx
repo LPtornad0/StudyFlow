@@ -102,9 +102,109 @@ export function TaskDialog({
     onOpenChange(false);
   }
 
+  const formContent = (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <div className="space-y-1.5">
+        <Label htmlFor="task-title">Titre</Label>
+        <Input id="task-title" required value={title} onChange={(e) => setTitle(e.target.value)} />
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="task-description">Description (Markdown)</Label>
+        <MarkdownEditor id="task-description" value={description} onChange={setDescription} />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label htmlFor="task-priority">Priorité</Label>
+          <Select value={priority} onValueChange={(v) => setPriority(v as Task["priority"])}>
+            <SelectTrigger id="task-priority">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {TASK_PRIORITIES.map((p) => (
+                <SelectItem key={p.value} value={p.value}>
+                  {p.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="task-due-date">Échéance</Label>
+          <Input
+            id="task-due-date"
+            type="date"
+            value={dueDate}
+            onChange={(e) => setDueDate(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="task-estimate">Temps estimé (en heures)</Label>
+        <Input
+          id="task-estimate"
+          type="number"
+          min="0"
+          step="0.25"
+          value={estimatedHours}
+          onChange={(e) => setEstimatedHours(e.target.value)}
+        />
+      </div>
+
+      <fieldset className="space-y-1.5">
+        <legend className="text-sm font-medium leading-none">Couleur de la carte</legend>
+        <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Couleur de la carte">
+          {TASK_COLOR_SWATCHES.map((swatch) => (
+            <button
+              key={swatch.value || "none"}
+              type="button"
+              role="radio"
+              aria-checked={color === swatch.value}
+              aria-label={swatch.label}
+              title={swatch.label}
+              onClick={() => setColor(swatch.value)}
+              className={cn(
+                "h-7 w-7 rounded-full border-2 transition-transform",
+                color === swatch.value ? "scale-110 border-foreground" : "border-transparent"
+              )}
+              style={{ backgroundColor: swatch.value || "transparent" }}
+            >
+              {!swatch.value && (
+                <span className="flex h-full w-full items-center justify-center rounded-full border border-dashed text-[10px] text-muted-foreground">
+                  Ø
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      </fieldset>
+
+      <div className="flex items-center justify-between pt-2">
+        {task && onDelete ? (
+          <Button type="button" variant="destructive" onClick={handleDelete}>
+            Supprimer
+          </Button>
+        ) : (
+          <span />
+        )}
+        <Button type="submit" disabled={submitting || !title.trim()}>
+          {submitting ? "Enregistrement…" : "Enregistrer"}
+        </Button>
+      </div>
+    </form>
+  );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        className={cn(
+          "max-h-[90vh] overflow-y-auto",
+          task ? "max-w-3xl" : "max-w-lg"
+        )}
+      >
         <DialogHeader>
           <DialogTitle>{task ? "Modifier la tâche" : "Nouvelle tâche"}</DialogTitle>
           <DialogDescription>
@@ -115,100 +215,16 @@ export function TaskDialog({
 
         {error && <ErrorState message={error} />}
 
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="task-title">Titre</Label>
-            <Input id="task-title" required value={title} onChange={(e) => setTitle(e.target.value)} />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="task-description">Description (Markdown)</Label>
-            <MarkdownEditor id="task-description" value={description} onChange={setDescription} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="task-priority">Priorité</Label>
-              <Select value={priority} onValueChange={(v) => setPriority(v as Task["priority"])}>
-                <SelectTrigger id="task-priority">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TASK_PRIORITIES.map((p) => (
-                    <SelectItem key={p.value} value={p.value}>
-                      {p.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        {task ? (
+          <div className="grid gap-6 md:grid-cols-[1fr_1.3fr]">
+            <div className="border-t pt-4 md:border-t-0 md:border-r md:pr-6 md:pt-0">
+              <TaskComments taskId={task.id} />
             </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="task-due-date">Échéance</Label>
-              <Input
-                id="task-due-date"
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-              />
-            </div>
+            <div>{formContent}</div>
           </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="task-estimate">Temps estimé (en heures)</Label>
-            <Input
-              id="task-estimate"
-              type="number"
-              min="0"
-              step="0.25"
-              value={estimatedHours}
-              onChange={(e) => setEstimatedHours(e.target.value)}
-            />
-          </div>
-
-          <fieldset className="space-y-1.5">
-            <legend className="text-sm font-medium leading-none">Couleur de la carte</legend>
-            <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Couleur de la carte">
-              {TASK_COLOR_SWATCHES.map((swatch) => (
-                <button
-                  key={swatch.value || "none"}
-                  type="button"
-                  role="radio"
-                  aria-checked={color === swatch.value}
-                  aria-label={swatch.label}
-                  title={swatch.label}
-                  onClick={() => setColor(swatch.value)}
-                  className={cn(
-                    "h-7 w-7 rounded-full border-2 transition-transform",
-                    color === swatch.value ? "scale-110 border-foreground" : "border-transparent"
-                  )}
-                  style={{ backgroundColor: swatch.value || "transparent" }}
-                >
-                  {!swatch.value && (
-                    <span className="flex h-full w-full items-center justify-center rounded-full border border-dashed text-[10px] text-muted-foreground">
-                      Ø
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-
-          <div className="flex items-center justify-between pt-2">
-            {task && onDelete ? (
-              <Button type="button" variant="destructive" onClick={handleDelete}>
-                Supprimer
-              </Button>
-            ) : (
-              <span />
-            )}
-            <Button type="submit" disabled={submitting || !title.trim()}>
-              {submitting ? "Enregistrement…" : "Enregistrer"}
-            </Button>
-          </div>
-        </form>
-
-        {task && <TaskComments taskId={task.id} />}
+        ) : (
+          formContent
+        )}
       </DialogContent>
     </Dialog>
   );
