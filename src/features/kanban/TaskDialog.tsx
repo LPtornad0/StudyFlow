@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MarkdownEditor } from "@/components/ui/markdown-editor";
 import { ErrorState } from "@/components/shared/ErrorState";
+import { TaskComments } from "@/features/comments/TaskComments";
 import type { Task } from "@/types/domain";
 import { TASK_PRIORITIES } from "@/types/domain";
 import { TASK_COLOR_SWATCHES } from "./TASK_COLORS";
@@ -103,7 +104,7 @@ export function TaskDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{task ? "Modifier la tâche" : "Nouvelle tâche"}</DialogTitle>
           <DialogDescription>
@@ -206,6 +207,8 @@ export function TaskDialog({
             </Button>
           </div>
         </form>
+
+        {task && <TaskComments taskId={task.id} />}
       </DialogContent>
     </Dialog>
   );
