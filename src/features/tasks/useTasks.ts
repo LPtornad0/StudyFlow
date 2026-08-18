@@ -10,6 +10,7 @@ export type NewTaskInput = {
   priority?: Task["priority"];
   dueDate?: string | null;
   estimatedMinutes?: number | null;
+  color?: string | null;
 };
 
 export function useTasks(projectId: string | undefined) {
@@ -57,6 +58,7 @@ export function useTasks(projectId: string | undefined) {
         priority: input.priority ?? "medium",
         due_date: input.dueDate ?? null,
         estimated_minutes: input.estimatedMinutes ?? null,
+        color: input.color ?? null,
         position: positionInColumn,
         created_by: user?.id ?? null,
       })
@@ -85,6 +87,7 @@ export function useTasks(projectId: string | undefined) {
     if (patch.priority !== undefined) dbPatch.priority = patch.priority;
     if (patch.dueDate !== undefined) dbPatch.due_date = patch.dueDate;
     if (patch.estimatedMinutes !== undefined) dbPatch.estimated_minutes = patch.estimatedMinutes;
+    if (patch.color !== undefined) dbPatch.color = patch.color || null;
 
     const previous = tasks;
     setTasks((prev) =>

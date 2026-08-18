@@ -21,6 +21,7 @@ export function TaskCard({ task, onOpen }: { task: Task; onOpen: (task: Task) =>
 
   const overdueLabel = getOverdueLabel(task.due_date);
   const priorityLabel = TASK_PRIORITIES.find((p) => p.value === task.priority)?.label ?? task.priority;
+  const accentColor = (task as Task & { color?: string | null }).color;
 
   return (
     <div
@@ -36,7 +37,8 @@ export function TaskCard({ task, onOpen }: { task: Task; onOpen: (task: Task) =>
         onKeyDown={(e) => {
           if (e.key === "Enter") onOpen(task);
         }}
-        className="cursor-grab active:cursor-grabbing"
+        className="cursor-grab overflow-hidden active:cursor-grabbing"
+        style={accentColor ? { borderLeft: `4px solid ${accentColor}` } : undefined}
         {...attributes}
         {...listeners}
       >

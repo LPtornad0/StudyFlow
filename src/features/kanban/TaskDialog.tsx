@@ -10,10 +10,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MarkdownEditor } from "@/components/ui/markdown-editor";
 import { ErrorState } from "@/components/shared/ErrorState";
 import type { Task } from "@/types/domain";
 import { TASK_PRIORITIES } from "@/types/domain";
+import { TASK_COLOR_SWATCHES } from "./TASK_COLORS";
 import type { NewTaskInput } from "@/features/tasks/useTasks";
+import { cn } from "@/lib/utils/cn";
 
 export function TaskDialog({
   open,
@@ -33,15 +36,18 @@ export function TaskDialog({
   const [priority, setPriority] = useState<Task["priority"]>("medium");
   const [dueDate, setDueDate] = useState("");
   const [estimatedHours, setEstimatedHours] = useState("");
+  const [color, setColor] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (task) {
+      const taskWithColor = task as Task & { color?: string | null };
       setTitle(task.title);
       setDescription(task.description ?? "");
       setPriority(task.priority as Task["priority"]);
       setDueDate(task.due_date ?? "");
+      setColor(taskWithColor.color ?? "");
       setEstimatedHours(
         task.estimated_minutes !== null && task.estimated_minutes !== undefined
           ? String(task.estimated_minutes / 60)
@@ -52,6 +58,7 @@ export function TaskDialog({
       setDescription("");
       setPriority("medium");
       setDueDate("");
+      setColor("");
       setEstimatedHours("");
     }
     setError(null);
@@ -71,6 +78,7 @@ export function TaskDialog({
       priority,
       dueDate: dueDate || null,
       estimatedMinutes,
+      color: color || null,
     });
 
     setSubmitting(false);
@@ -95,11 +103,12 @@ export function TaskDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>{task ? "Modifier la tâche" : "Nouvelle tâche"}</DialogTitle>
           <DialogDescription>
-            Les durées sont saisies en heures ; elles sont stockées en minutes.
+            Les durées sont saisies en heures ; elles sont stockées en minutes. La description
+            accepte le Markdown.
           </DialogDescription>
         </DialogHeader>
 
@@ -112,12 +121,8 @@ export function TaskDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="task-description">Description</Label>
-            <Input
-              id="task-description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
+            <Label htmlFor="task-description">Description (Markdown)</Label>
+            <MarkdownEditor id="task-description" value={description} onChange={setDescription} />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -159,6 +164,34 @@ export function TaskDialog({
               onChange={(e) => setEstimatedHours(e.target.value)}
             />
           </div>
+
+          <fieldset className="space-y-1.5">
+            <legend className="text-sm font-medium leading-none">Couleur de la carte</legend>
+            <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Couleur de la carte">
+              {TASK_COLOR_SWATCHES.map((swatch) => (
+                <button
+                  key={swatch.value || "none"}
+                  type="button"
+                  role="radio"
+                  aria-checked={color === swatch.value}
+                  aria-label={swatch.label}
+                  title={swatch.label}
+                  onClick={() => setColor(swatch.value)}
+                  className={cn(
+                    "h-7 w-7 rounded-full border-2 transition-transform",
+                    color === swatch.value ? "scale-110 border-foreground" : "border-transparent"
+                  )}
+                  style={{ backgroundColor: swatch.value || "transparent" }}
+                >
+                  {!swatch.value && (
+                    <span className="flex h-full w-full items-center justify-center rounded-full border border-dashed text-[10px] text-muted-foreground">
+                      Ø
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </fieldset>
 
           <div className="flex items-center justify-between pt-2">
             {task && onDelete ? (
