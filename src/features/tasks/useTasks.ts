@@ -6,10 +6,12 @@ import { useAuth } from "@/features/auth/useAuth";
 export type NewTaskInput = {
   title: string;
   description?: string;
-  status?: TaskStatus;
+  columnId?: string;
+  isDoneColumn?: boolean;
   priority?: Task["priority"];
   dueDate?: string | null;
   estimatedMinutes?: number | null;
+  color?: string | null;
 };
 
 export function useTasks(projectId: string | undefined) {
@@ -44,8 +46,9 @@ export function useTasks(projectId: string | undefined) {
 
   async function createTask(input: NewTaskInput): Promise<{ error: string | null }> {
     if (!projectId) return { error: "Projet introuvable." };
-    const status = input.status ?? "todo";
-    const positionInColumn = tasks.filter((t) => t.status === status).length;
+    if (!input.columnId) return { error: "Liste introuvable." };
+    const positionInColumn = tasks.filter((t) => t.column_id === input.columnId).length;
+    const status: TaskStatus = input.isDoneColumn ? "done" : "todo";
 
     const { data, error } = await supabase
       .from("tasks")
@@ -57,8 +60,11 @@ export function useTasks(projectId: string | undefined) {
         priority: input.priority ?? "medium",
         due_date: input.dueDate ?? null,
         estimated_minutes: input.estimatedMinutes ?? null,
+        color: input.color ?? null,
+        column_id: input.columnId,
         position: positionInColumn,
         created_by: user?.id ?? null,
+        completed_at: input.isDoneColumn ? new Date().toISOString() : null,
       })
       .select()
       .single();
@@ -78,13 +84,10 @@ export function useTasks(projectId: string | undefined) {
     const dbPatch: Record<string, unknown> = {};
     if (patch.title !== undefined) dbPatch.title = patch.title;
     if (patch.description !== undefined) dbPatch.description = patch.description || null;
-    if (patch.status !== undefined) {
-      dbPatch.status = patch.status;
-      dbPatch.completed_at = patch.status === "done" ? new Date().toISOString() : null;
-    }
     if (patch.priority !== undefined) dbPatch.priority = patch.priority;
     if (patch.dueDate !== undefined) dbPatch.due_date = patch.dueDate;
     if (patch.estimatedMinutes !== undefined) dbPatch.estimated_minutes = patch.estimatedMinutes;
+    if (patch.color !== undefined) dbPatch.color = patch.color || null;
 
     const previous = tasks;
     setTasks((prev) =>
@@ -112,52 +115,53 @@ export function useTasks(projectId: string | undefined) {
     return { error: null };
   }
 
-  /**
-   * Déplace une tâche vers une colonne/position donnée et réindexe toutes les
-   * tâches impactées (colonne d'origine ET colonne de destination) afin que le
-   * champ `position` reste une séquence continue (0, 1, 2…) par colonne. Chaque
-   * ligne affectée est mise à jour individuellement avec `.update().eq("id", …)`
-   * (et non un `upsert`, qui échouerait sur les colonnes obligatoires comme
-   * `title` ou `project_id` non fournies ici).
-   */
   async function moveTask(
     taskId: string,
-    newStatus: TaskStatus,
-    newPosition: number
+    columnId: string,
+    newPosition: number,
+    isDoneColumn: boolean
   ): Promise<{ error: string | null }> {
     const previous = tasks;
     const movingTask = tasks.find((t) => t.id === taskId);
     if (!movingTask) return { error: "Tâche introuvable." };
 
-    const grouped: Record<TaskStatus, Task[]> = { todo: [], in_progress: [], done: [] };
+    const byColumn = new Map<string, Task[]>();
     for (const t of tasks) {
-      if (t.id === taskId) continue;
-      grouped[t.status as TaskStatus].push(t);
+      if (t.id === taskId || !t.column_id) continue;
+      const list = byColumn.get(t.column_id) ?? [];
+      list.push(t);
+      byColumn.set(t.column_id, list);
     }
-    (Object.keys(grouped) as TaskStatus[]).forEach((status) =>
-      grouped[status].sort((a, b) => a.position - b.position)
-    );
+    byColumn.forEach((list) => list.sort((a, b) => a.position - b.position));
 
     const updatedMovingTask: Task = {
       ...movingTask,
-      status: newStatus,
-      completed_at: newStatus === "done" ? new Date().toISOString() : null,
+      column_id: columnId,
+      status: isDoneColumn ? "done" : "todo",
+      completed_at: isDoneColumn ? new Date().toISOString() : null,
     };
 
-    const destination = grouped[newStatus];
+    const destination = byColumn.get(columnId) ?? [];
     const insertAt = Math.max(0, Math.min(newPosition, destination.length));
     destination.splice(insertAt, 0, updatedMovingTask);
+    byColumn.set(columnId, destination);
 
     const finalById = new Map<string, Task>();
-    (Object.keys(grouped) as TaskStatus[]).forEach((status) => {
-      grouped[status].forEach((t, index) => {
-        finalById.set(t.id, { ...t, status, position: index });
+    byColumn.forEach((list, colId) => {
+      list.forEach((t, index) => {
+        finalById.set(t.id, { ...t, column_id: colId, position: index });
       });
     });
 
     const affected = Array.from(finalById.values()).filter((t) => {
       const original = tasks.find((o) => o.id === t.id);
-      return !original || original.status !== t.status || original.position !== t.position;
+      return (
+        !original ||
+        original.column_id !== t.column_id ||
+        original.position !== t.position ||
+        original.status !== t.status ||
+        original.completed_at !== t.completed_at
+      );
     });
 
     const nextTasks = tasks.map((t) => finalById.get(t.id) ?? t);
@@ -167,7 +171,12 @@ export function useTasks(projectId: string | undefined) {
       affected.map((t) =>
         supabase
           .from("tasks")
-          .update({ status: t.status, position: t.position, completed_at: t.completed_at })
+          .update({
+            column_id: t.column_id,
+            position: t.position,
+            status: t.status,
+            completed_at: t.completed_at,
+          })
           .eq("id", t.id)
       )
     );

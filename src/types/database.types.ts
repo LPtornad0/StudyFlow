@@ -12,6 +12,12 @@ export type Database = {
   }
   public: {
     Tables: {
+      board_columns: {
+        Row: { created_at: string; id: string; is_done_column: boolean; name: string; position: number; project_id: string; updated_at: string }
+        Insert: { created_at?: string; id?: string; is_done_column?: boolean; name: string; position?: number; project_id: string; updated_at?: string }
+        Update: { created_at?: string; id?: string; is_done_column?: boolean; name?: string; position?: number; project_id?: string; updated_at?: string }
+        Relationships: [{ foreignKeyName: "board_columns_project_id_fkey"; columns: ["project_id"]; isOneToOne: false; referencedRelation: "projects"; referencedColumns: ["id"] }]
+      }
       comments: {
         Row: { content: string; created_at: string; id: string; task_id: string; updated_at: string; user_id: string }
         Insert: { content: string; created_at?: string; id?: string; task_id: string; updated_at?: string; user_id: string }
@@ -43,10 +49,10 @@ export type Database = {
         Relationships: [{ foreignKeyName: "task_labels_label_id_fkey"; columns: ["label_id"]; isOneToOne: false; referencedRelation: "labels"; referencedColumns: ["id"] }, { foreignKeyName: "task_labels_task_id_fkey"; columns: ["task_id"]; isOneToOne: false; referencedRelation: "tasks"; referencedColumns: ["id"] }]
       }
       tasks: {
-        Row: { color: string | null; completed_at: string | null; created_at: string; created_by: string | null; description: string | null; due_date: string | null; estimated_minutes: number | null; id: string; position: number; priority: string; project_id: string; status: string; title: string; updated_at: string }
-        Insert: { color?: string | null; completed_at?: string | null; created_at?: string; created_by?: string | null; description?: string | null; due_date?: string | null; estimated_minutes?: number | null; id?: string; position?: number; priority?: string; project_id: string; status?: string; title: string; updated_at?: string }
-        Update: { color?: string | null; completed_at?: string | null; created_at?: string; created_by?: string | null; description?: string | null; due_date?: string | null; estimated_minutes?: number | null; id?: string; position?: number; priority?: string; project_id?: string; status?: string; title?: string; updated_at?: string }
-        Relationships: [{ foreignKeyName: "tasks_created_by_fkey"; columns: ["created_by"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] }, { foreignKeyName: "tasks_project_id_fkey"; columns: ["project_id"]; isOneToOne: false; referencedRelation: "projects"; referencedColumns: ["id"] }]
+        Row: { color: string | null; column_id: string | null; completed_at: string | null; created_at: string; created_by: string | null; description: string | null; due_date: string | null; estimated_minutes: number | null; id: string; position: number; priority: string; project_id: string; status: string; title: string; updated_at: string }
+        Insert: { color?: string | null; column_id?: string | null; completed_at?: string | null; created_at?: string; created_by?: string | null; description?: string | null; due_date?: string | null; estimated_minutes?: number | null; id?: string; position?: number; priority?: string; project_id: string; status?: string; title: string; updated_at?: string }
+        Update: { color?: string | null; column_id?: string | null; completed_at?: string | null; created_at?: string; created_by?: string | null; description?: string | null; due_date?: string | null; estimated_minutes?: number | null; id?: string; position?: number; priority?: string; project_id?: string; status?: string; title?: string; updated_at?: string }
+        Relationships: [{ foreignKeyName: "tasks_column_id_fkey"; columns: ["column_id"]; isOneToOne: false; referencedRelation: "board_columns"; referencedColumns: ["id"] }, { foreignKeyName: "tasks_created_by_fkey"; columns: ["created_by"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] }, { foreignKeyName: "tasks_project_id_fkey"; columns: ["project_id"]; isOneToOne: false; referencedRelation: "projects"; referencedColumns: ["id"] }]
       }
       workspace_members: {
         Row: { created_at: string; role: string; user_id: string; workspace_id: string }

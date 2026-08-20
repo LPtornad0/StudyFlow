@@ -6,6 +6,7 @@ export type WorkspaceMember = Tables<"workspace_members">;
 export type Project = Tables<"projects">;
 export type Task = Tables<"tasks">;
 export type Label = Tables<"labels">;
+export type BoardColumn = Tables<"board_columns">;
 
 export type TaskStatus = "todo" | "in_progress" | "done";
 export type TaskPriority = "low" | "medium" | "high" | "urgent";
