@@ -110,7 +110,9 @@ export function KanbanBoard({
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex gap-3 overflow-x-auto pb-2">
+        {/* Pas d'overflow-x-auto ici : la rangée de listes déborde volontairement
+            pour que ce soit la page entière qui défile horizontalement. */}
+        <div className="flex items-start gap-3 pb-2">
           {orderedColumns.map((column) => (
             <div key={column.id} className="w-72 flex-none space-y-2">
               <KanbanColumn
