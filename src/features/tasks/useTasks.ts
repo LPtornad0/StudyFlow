@@ -115,10 +115,10 @@ export function useTasks(projectId: string | undefined) {
   /**
    * Déplace une tâche vers une colonne/position donnée et réindexe toutes les
    * tâches impactées (colonne d'origine ET colonne de destination) afin que le
-   * champ `position` reste une séquence continue (0, 1, 2…) par colonne. Sans
-   * cette réindexation, deux tâches pouvaient se retrouver avec la même position
-   * et le réordonnancement au sein d'une même liste ne se répercutait pas de
-   * façon fiable après rechargement.
+   * champ `position` reste une séquence continue (0, 1, 2…) par colonne. Chaque
+   * ligne affectée est mise à jour individuellement avec `.update().eq("id", …)`
+   * (et non un `upsert`, qui échouerait sur les colonnes obligatoires comme
+   * `title` ou `project_id` non fournies ici).
    */
   async function moveTask(
     taskId: string,
@@ -163,18 +163,18 @@ export function useTasks(projectId: string | undefined) {
     const nextTasks = tasks.map((t) => finalById.get(t.id) ?? t);
     setTasks(nextTasks);
 
-    const { error } = await supabase.from("tasks").upsert(
-      affected.map((t) => ({
-        id: t.id,
-        status: t.status,
-        position: t.position,
-        completed_at: t.completed_at,
-      })),
-      { onConflict: "id" }
+    const results = await Promise.all(
+      affected.map((t) =>
+        supabase
+          .from("tasks")
+          .update({ status: t.status, position: t.position, completed_at: t.completed_at })
+          .eq("id", t.id)
+      )
     );
+    const failed = results.find((r) => r.error);
 
-    if (error) {
-      console.error("Erreur de déplacement de la tâche :", error);
+    if (failed?.error) {
+      console.error("Erreur de déplacement de la tâche :", failed.error);
       setTasks(previous);
       return { error: "Le déplacement n'a pas pu être enregistré. Position restaurée." };
     }
