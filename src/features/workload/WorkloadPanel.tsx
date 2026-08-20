@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Task } from "@/types/domain";
 import { useWorkload } from "./useWorkload";
+import { formatMinutes } from "@/lib/utils/date";
 
 export function WorkloadPanel({ tasks }: { tasks: Task[] }) {
   const { summary, assumptions } = useWorkload(tasks);
@@ -26,7 +27,7 @@ export function WorkloadPanel({ tasks }: { tasks: Task[] }) {
                   })}
                 </span>
                 <span className="flex items-center gap-2">
-                  {Math.round(day.plannedMinutes)} min
+                  {formatMinutes(Math.round(day.plannedMinutes))}
                   {day.atRisk && <Badge variant="destructive">Période à risque</Badge>}
                 </span>
               </div>
@@ -38,7 +39,7 @@ export function WorkloadPanel({ tasks }: { tasks: Task[] }) {
           <p className="font-medium">Hypothèses de calcul :</p>
           <ul className="mt-1 list-inside list-disc space-y-0.5">
             <li>
-              Capacité quotidienne réaliste : {(assumptions.dailyCapacityMinutes / 60).toFixed(1)} h
+              Capacité quotidienne réaliste : {formatMinutes(assumptions.dailyCapacityMinutes)}
               (seuil configurable).
             </li>
             <li>
