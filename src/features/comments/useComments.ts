@@ -13,7 +13,7 @@ export type CommentWithAuthor = {
 };
 
 export function useComments(taskId: string | undefined) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [comments, setComments] = useState<CommentWithAuthor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +47,7 @@ export function useComments(taskId: string | undefined) {
     };
 
     const mapped: CommentWithAuthor[] = ((data ?? []) as Row[]).map((row) => {
-      const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
+      const profileRow = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
       return {
         id: row.id,
         task_id: row.task_id,
@@ -55,7 +55,7 @@ export function useComments(taskId: string | undefined) {
         content: row.content,
         created_at: row.created_at,
         updated_at: row.updated_at,
-        author_name: profile?.full_name ?? null,
+        author_name: profileRow?.full_name ?? null,
       };
     });
 
@@ -85,7 +85,7 @@ export function useComments(taskId: string | undefined) {
 
     setComments((prev) => [
       ...prev,
-      { ...data, author_name: null },
+      { ...data, author_name: profile?.full_name ?? null },
     ]);
     return { error: null };
   }

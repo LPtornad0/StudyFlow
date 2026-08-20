@@ -16,7 +16,7 @@ function formatCommentDate(iso: string): string {
 }
 
 export function TaskComments({ taskId }: { taskId: string }) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { comments, loading, error, addComment, deleteComment } = useComments(taskId);
   const [content, setContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -55,28 +55,36 @@ export function TaskComments({ taskId }: { taskId: string }) {
       )}
 
       {!loading && !error && comments.length > 0 && (
-        <ul className="flex-1 space-y-3 overflow-y-auto pr-1" style={{ maxHeight: "22rem" }}>
-          {comments.map((comment) => (
-            <li key={comment.id} className="rounded-md bg-muted/40 p-2 text-sm">
-              <div className="flex items-center justify-between gap-2">
-                <span className="font-medium">{comment.author_name ?? "Utilisateur"}</span>
-                <span className="text-xs text-muted-foreground">
-                  {formatCommentDate(comment.created_at)}
-                </span>
-              </div>
-              <p className="mt-1 whitespace-pre-wrap">{comment.content}</p>
-              {comment.user_id === user?.id && (
-                <button
-                  type="button"
-                  onClick={() => handleDelete(comment.id)}
-                  className="mt-1 text-xs text-destructive underline-offset-2 hover:underline"
-                  aria-label="Supprimer ce commentaire"
-                >
-                  Supprimer
-                </button>
-              )}
-            </li>
-          ))}
+        <ul className="flex-1 space-y-2.5 overflow-y-auto pr-1" style={{ maxHeight: "22rem" }}>
+          {comments.map((comment) => {
+            const authorLabel =
+              comment.author_name ??
+              (comment.user_id === user?.id ? profile?.full_name ?? "Toi" : "Utilisateur");
+            return (
+              <li
+                key={comment.id}
+                className="rounded-lg border border-border bg-card p-3 text-sm shadow-sm"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-semibold text-foreground">{authorLabel}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {formatCommentDate(comment.created_at)}
+                  </span>
+                </div>
+                <p className="mt-1.5 whitespace-pre-wrap text-foreground/90">{comment.content}</p>
+                {comment.user_id === user?.id && (
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(comment.id)}
+                    className="mt-1.5 text-xs text-destructive underline-offset-2 hover:underline"
+                    aria-label="Supprimer ce commentaire"
+                  >
+                    Supprimer
+                  </button>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
 
