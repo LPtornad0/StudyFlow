@@ -10,7 +10,6 @@ export type NewTaskInput = {
   priority?: Task["priority"];
   dueDate?: string | null;
   estimatedMinutes?: number | null;
-  color?: string | null;
 };
 
 export function useTasks(projectId: string | undefined) {
@@ -58,7 +57,6 @@ export function useTasks(projectId: string | undefined) {
         priority: input.priority ?? "medium",
         due_date: input.dueDate ?? null,
         estimated_minutes: input.estimatedMinutes ?? null,
-        color: input.color ?? null,
         position: positionInColumn,
         created_by: user?.id ?? null,
       })
@@ -87,7 +85,6 @@ export function useTasks(projectId: string | undefined) {
     if (patch.priority !== undefined) dbPatch.priority = patch.priority;
     if (patch.dueDate !== undefined) dbPatch.due_date = patch.dueDate;
     if (patch.estimatedMinutes !== undefined) dbPatch.estimated_minutes = patch.estimatedMinutes;
-    if (patch.color !== undefined) dbPatch.color = patch.color || null;
 
     const previous = tasks;
     setTasks((prev) =>
@@ -115,24 +112,66 @@ export function useTasks(projectId: string | undefined) {
     return { error: null };
   }
 
+  /**
+   * Déplace une tâche vers une colonne/position donnée et réindexe toutes les
+   * tâches impactées (colonne d'origine ET colonne de destination) afin que le
+   * champ `position` reste une séquence continue (0, 1, 2…) par colonne. Sans
+   * cette réindexation, deux tâches pouvaient se retrouver avec la même position
+   * et le réordonnancement au sein d'une même liste ne se répercutait pas de
+   * façon fiable après rechargement.
+   */
   async function moveTask(
     taskId: string,
     newStatus: TaskStatus,
     newPosition: number
   ): Promise<{ error: string | null }> {
     const previous = tasks;
-    setTasks((prev) =>
-      prev.map((t) => (t.id === taskId ? { ...t, status: newStatus, position: newPosition } : t))
+    const movingTask = tasks.find((t) => t.id === taskId);
+    if (!movingTask) return { error: "Tâche introuvable." };
+
+    const grouped: Record<TaskStatus, Task[]> = { todo: [], in_progress: [], done: [] };
+    for (const t of tasks) {
+      if (t.id === taskId) continue;
+      grouped[t.status as TaskStatus].push(t);
+    }
+    (Object.keys(grouped) as TaskStatus[]).forEach((status) =>
+      grouped[status].sort((a, b) => a.position - b.position)
     );
 
-    const { error } = await supabase
-      .from("tasks")
-      .update({
-        status: newStatus,
-        position: newPosition,
-        completed_at: newStatus === "done" ? new Date().toISOString() : null,
-      })
-      .eq("id", taskId);
+    const updatedMovingTask: Task = {
+      ...movingTask,
+      status: newStatus,
+      completed_at: newStatus === "done" ? new Date().toISOString() : null,
+    };
+
+    const destination = grouped[newStatus];
+    const insertAt = Math.max(0, Math.min(newPosition, destination.length));
+    destination.splice(insertAt, 0, updatedMovingTask);
+
+    const finalById = new Map<string, Task>();
+    (Object.keys(grouped) as TaskStatus[]).forEach((status) => {
+      grouped[status].forEach((t, index) => {
+        finalById.set(t.id, { ...t, status, position: index });
+      });
+    });
+
+    const affected = Array.from(finalById.values()).filter((t) => {
+      const original = tasks.find((o) => o.id === t.id);
+      return !original || original.status !== t.status || original.position !== t.position;
+    });
+
+    const nextTasks = tasks.map((t) => finalById.get(t.id) ?? t);
+    setTasks(nextTasks);
+
+    const { error } = await supabase.from("tasks").upsert(
+      affected.map((t) => ({
+        id: t.id,
+        status: t.status,
+        position: t.position,
+        completed_at: t.completed_at,
+      })),
+      { onConflict: "id" }
+    );
 
     if (error) {
       console.error("Erreur de déplacement de la tâche :", error);
