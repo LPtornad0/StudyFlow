@@ -31,7 +31,7 @@ export function LoginPage() {
     <div className="flex min-h-screen items-center justify-center p-4">
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
         <div className="space-y-1 text-center">
-          <h1 className="text-xl font-semibold">Connexion à StudyFlow</h1>
+          <h1 className="text-xl font-semibold">Connexion à Kanbut</h1>
           <p className="text-sm text-muted-foreground">
             L'outil de pilotage des projets et révisions pour les étudiants en BUT.
           </p>

@@ -35,7 +35,7 @@ export function SignupPage() {
         <div className="max-w-sm space-y-2">
           <h1 className="text-xl font-semibold">Vérifie tes e-mails</h1>
           <p className="text-sm text-muted-foreground">
-            Un lien de confirmation a été envoyé à {email}. Ton profil StudyFlow sera créé
+            Un lien de confirmation a été envoyé à {email}. Ton profil Kanbut sera créé
             automatiquement dès la confirmation.
           </p>
           <Button onClick={() => navigate("/connexion")}>Retour à la connexion</Button>
@@ -48,7 +48,7 @@ export function SignupPage() {
     <div className="flex min-h-screen items-center justify-center p-4">
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
         <div className="space-y-1 text-center">
-          <h1 className="text-xl font-semibold">Créer un compte StudyFlow</h1>
+          <h1 className="text-xl font-semibold">Créer un compte Kanbut</h1>
         </div>
 
         {error && <ErrorState message={error} />}

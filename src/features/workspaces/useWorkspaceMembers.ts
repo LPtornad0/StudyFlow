@@ -62,7 +62,7 @@ export function useWorkspaceMembers(workspaceId: string | undefined) {
   }, [fetchMembers]);
 
   /**
-   * Invite un utilisateur déjà inscrit sur StudyFlow, par e-mail, à rejoindre
+   * Invite un utilisateur déjà inscrit sur Kanbut, par e-mail, à rejoindre
    * l'espace de travail. La recherche par e-mail se fait côté base via la
    * fonction `invite_workspace_member` (SECURITY DEFINER) car `auth.users`
    * n'est pas accessible directement depuis le client.

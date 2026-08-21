@@ -6,13 +6,10 @@ export function AppLayout() {
   const { signOut, profile } = useAuth();
 
   return (
-    // h-screen + overflow-hidden ici : la fenêtre du navigateur ne défile
-    // jamais elle-même. Chaque page gère son propre défilement interne dans
-    // la zone <main>, qui reste bornée à la hauteur restante de l'écran.
     <div className="flex h-screen flex-col overflow-hidden">
       <header className="flex flex-none items-center justify-between border-b px-4 py-3">
         <NavLink to="/espaces" className="text-lg font-semibold">
-          StudyFlow
+          Kanbut
         </NavLink>
         <div className="flex items-center gap-3">
           {profile?.full_name && (
