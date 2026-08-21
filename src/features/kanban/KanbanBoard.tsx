@@ -29,9 +29,6 @@ import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { cn } from "@/lib/utils/cn";
 
-// Préfixe pour distinguer un identifiant de "liste en train d'être glisсée"
-// d'un identifiant de tâche ou d'un identifiant de liste utilisé comme cible
-// de dépôt de tâche (KanbanColumn utilise l'id brut pour ça).
 const COLUMN_DND_PREFIX = "column:";
 
 function SortableColumnCard({
@@ -150,9 +147,20 @@ export function KanbanBoard({
     const overId = String(over.id);
 
     if (activeId.startsWith(COLUMN_DND_PREFIX)) {
-      if (!overId.startsWith(COLUMN_DND_PREFIX) || activeId === overId) return;
       const activeColumnId = activeId.slice(COLUMN_DND_PREFIX.length);
-      const overColumnId = overId.slice(COLUMN_DND_PREFIX.length);
+      // "over" peut être l'id préfixé de la colonne (poignée), l'id brut de la
+      // zone de dépôt de la colonne (utilisée aussi pour les tâches), ou l'id
+      // d'une tâche à l'intérieur de cette colonne : on ramène tout à un id de
+      // colonne pour que le réordonnancement fonctionne quel que soit le nœud
+      // détecté par la collision.
+      const overColumnId = overId.startsWith(COLUMN_DND_PREFIX)
+        ? overId.slice(COLUMN_DND_PREFIX.length)
+        : orderedColumns.some((c) => c.id === overId)
+          ? overId
+          : (tasks.find((t) => t.id === overId)?.column_id ?? null);
+
+      if (!overColumnId || overColumnId === activeColumnId) return;
+
       const oldIndex = orderedColumns.findIndex((c) => c.id === activeColumnId);
       const newIndex = orderedColumns.findIndex((c) => c.id === overColumnId);
       if (oldIndex === -1 || newIndex === -1) return;
@@ -211,9 +219,6 @@ export function KanbanBoard({
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        {/* La liste elle-même se glisse par sa poignée (l'en-tête, via
-            headerHandleProps) ; le corps de chaque liste reste réservé au
-            glisser-déposer des tâches. */}
         <SortableContext
           items={orderedColumns.map((c) => `${COLUMN_DND_PREFIX}${c.id}`)}
           strategy={horizontalListSortingStrategy}
