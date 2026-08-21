@@ -2,6 +2,7 @@ import { FormEvent, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useWorkspace } from "./useWorkspace";
 import { useProjects } from "@/features/projects/useProjects";
+import { WorkspaceMembersPanel } from "./WorkspaceMembersPanel";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -92,6 +93,8 @@ export function WorkspaceDetailPage() {
           ))}
         </div>
       )}
+
+      {workspaceId && <WorkspaceMembersPanel workspaceId={workspaceId} />}
     </div>
   );
 }

@@ -69,6 +69,10 @@ export type Database = {
     }
     Views: { [_ in never]: never }
     Functions: {
+      invite_workspace_member: {
+        Args: { p_email: string; p_role?: string; p_workspace_id: string }
+        Returns: { full_name: string; role: string; user_id: string }[]
+      }
       is_project_member: { Args: { _project_id: string; _user_id?: string }; Returns: boolean }
       is_task_member: { Args: { _task_id: string; _user_id?: string }; Returns: boolean }
       is_workspace_member: { Args: { _user_id?: string; _workspace_id: string }; Returns: boolean }
