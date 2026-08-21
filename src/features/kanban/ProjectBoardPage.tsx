@@ -25,6 +25,7 @@ export function ProjectBoardPage() {
     loading: columnsLoading,
     error: columnsError,
     addColumn,
+    updateColumn,
     reorderColumns,
   } = useBoardColumns(projectId);
   const [showWorkload, setShowWorkload] = useState(true);
@@ -53,6 +54,7 @@ export function ProjectBoardPage() {
           onDelete={deleteTask}
           onMove={moveTask}
           onAddColumn={addColumn}
+          onUpdateColumn={updateColumn}
           onReorderColumns={reorderColumns}
         />
       </div>

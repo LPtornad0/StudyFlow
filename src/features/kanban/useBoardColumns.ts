@@ -53,10 +53,32 @@ export function useBoardColumns(projectId: string | undefined) {
   }
 
   /**
+   * Met à jour le titre et/ou la couleur d'une liste.
+   */
+  async function updateColumn(
+    columnId: string,
+    patch: { name?: string; color?: string | null }
+  ): Promise<{ error: string | null }> {
+    const previous = columns;
+    setColumns((prev) => prev.map((c) => (c.id === columnId ? { ...c, ...patch } : c)));
+
+    const dbPatch: Record<string, unknown> = {};
+    if (patch.name !== undefined) dbPatch.name = patch.name;
+    if (patch.color !== undefined) dbPatch.color = patch.color;
+
+    const { error } = await supabase.from("board_columns").update(dbPatch).eq("id", columnId);
+    if (error) {
+      console.error("Erreur de mise à jour de la liste :", error);
+      setColumns(previous);
+      return { error: "La mise à jour de la liste a échoué. Modification annulée." };
+    }
+    return { error: null };
+  }
+
+  /**
    * Réordonne les listes du tableau selon l'ordre d'identifiants fourni
    * (obtenu par glisser-déposer côté UI) et persiste la nouvelle position de
-   * chaque liste via des mises à jour individuelles (pas d'upsert, pour les
-   * mêmes raisons que pour les tâches : éviter les colonnes obligatoires).
+   * chaque liste via des mises à jour individuelles.
    */
   async function reorderColumns(orderedIds: string[]): Promise<{ error: string | null }> {
     const previous = columns;
@@ -85,5 +107,5 @@ export function useBoardColumns(projectId: string | undefined) {
     return { error: null };
   }
 
-  return { columns, loading, error, addColumn, reorderColumns, refetch: fetchColumns };
+  return { columns, loading, error, addColumn, updateColumn, reorderColumns, refetch: fetchColumns };
 }

@@ -13,9 +13,9 @@ export type Database = {
   public: {
     Tables: {
       board_columns: {
-        Row: { created_at: string; id: string; is_done_column: boolean; name: string; position: number; project_id: string; updated_at: string }
-        Insert: { created_at?: string; id?: string; is_done_column?: boolean; name: string; position?: number; project_id: string; updated_at?: string }
-        Update: { created_at?: string; id?: string; is_done_column?: boolean; name?: string; position?: number; project_id?: string; updated_at?: string }
+        Row: { color: string | null; created_at: string; id: string; is_done_column: boolean; name: string; position: number; project_id: string; updated_at: string }
+        Insert: { color?: string | null; created_at?: string; id?: string; is_done_column?: boolean; name: string; position?: number; project_id: string; updated_at?: string }
+        Update: { color?: string | null; created_at?: string; id?: string; is_done_column?: boolean; name?: string; position?: number; project_id?: string; updated_at?: string }
         Relationships: [{ foreignKeyName: "board_columns_project_id_fkey"; columns: ["project_id"]; isOneToOne: false; referencedRelation: "projects"; referencedColumns: ["id"] }]
       }
       comments: {

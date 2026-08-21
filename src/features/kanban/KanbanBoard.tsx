@@ -23,6 +23,7 @@ import { KanbanColumn } from "./KanbanColumn";
 import { TaskCard } from "./TaskCard";
 import { TaskDialog } from "./TaskDialog";
 import { AddColumnForm } from "./AddColumnForm";
+import { EditColumnDialog } from "./EditColumnDialog";
 import type { BoardColumn, Task } from "@/types/domain";
 import type { NewTaskInput } from "@/features/tasks/useTasks";
 import { Button } from "@/components/ui/button";
@@ -36,11 +37,13 @@ function SortableColumnCard({
   tasks,
   onOpenTask,
   onAddTask,
+  onEditColumn,
 }: {
   column: BoardColumn;
   tasks: Task[];
   onOpenTask: (task: Task) => void;
   onAddTask: (columnId: string) => void;
+  onEditColumn: (column: BoardColumn) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: `${COLUMN_DND_PREFIX}${column.id}`,
@@ -57,7 +60,9 @@ function SortableColumnCard({
           id={column.id}
           title={column.name}
           count={tasks.length}
+          color={column.color}
           headerHandleProps={{ ...attributes, ...listeners }}
+          onEdit={() => onEditColumn(column)}
         >
           <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
             {tasks.map((task) => (
@@ -87,6 +92,7 @@ export function KanbanBoard({
   onDelete,
   onMove,
   onAddColumn,
+  onUpdateColumn,
   onReorderColumns,
 }: {
   tasks: Task[];
@@ -101,6 +107,10 @@ export function KanbanBoard({
     isDoneColumn: boolean
   ) => Promise<{ error: string | null }>;
   onAddColumn: (title: string) => Promise<{ error: string | null }>;
+  onUpdateColumn: (
+    columnId: string,
+    patch: { name?: string; color?: string | null }
+  ) => Promise<{ error: string | null }>;
   onReorderColumns: (orderedIds: string[]) => Promise<{ error: string | null }>;
 }) {
   const [activeTask, setActiveTask] = useState<Task | null>(null);
@@ -108,6 +118,8 @@ export function KanbanBoard({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [createColumnId, setCreateColumnId] = useState<string | null>(null);
+  const [editingColumn, setEditingColumn] = useState<BoardColumn | null>(null);
+  const [columnDialogOpen, setColumnDialogOpen] = useState(false);
   const [moveError, setMoveError] = useState<string | null>(null);
   const [columnError, setColumnError] = useState<string | null>(null);
 
@@ -148,11 +160,6 @@ export function KanbanBoard({
 
     if (activeId.startsWith(COLUMN_DND_PREFIX)) {
       const activeColumnId = activeId.slice(COLUMN_DND_PREFIX.length);
-      // "over" peut être l'id préfixé de la colonne (poignée), l'id brut de la
-      // zone de dépôt de la colonne (utilisée aussi pour les tâches), ou l'id
-      // d'une tâche à l'intérieur de cette colonne : on ramène tout à un id de
-      // colonne pour que le réordonnancement fonctionne quel que soit le nœud
-      // détecté par la collision.
       const overColumnId = overId.startsWith(COLUMN_DND_PREFIX)
         ? overId.slice(COLUMN_DND_PREFIX.length)
         : orderedColumns.some((c) => c.id === overId)
@@ -200,6 +207,11 @@ export function KanbanBoard({
     setDialogOpen(true);
   }
 
+  function openColumnEditDialog(column: BoardColumn) {
+    setEditingColumn(column);
+    setColumnDialogOpen(true);
+  }
+
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
       {moveError && (
@@ -231,6 +243,7 @@ export function KanbanBoard({
                 tasks={tasksByColumn.get(column.id) ?? []}
                 onOpenTask={openEditDialog}
                 onAddTask={openCreateDialog}
+                onEditColumn={openColumnEditDialog}
               />
             ))}
 
@@ -264,6 +277,13 @@ export function KanbanBoard({
               })
         }
         onDelete={editingTask ? onDelete : undefined}
+      />
+
+      <EditColumnDialog
+        open={columnDialogOpen}
+        onOpenChange={setColumnDialogOpen}
+        column={editingColumn}
+        onSubmit={onUpdateColumn}
       />
     </div>
   );
