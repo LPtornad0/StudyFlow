@@ -6,8 +6,11 @@ export function AppLayout() {
   const { signOut, profile } = useAuth();
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="flex items-center justify-between border-b px-4 py-3">
+    // h-screen + overflow-hidden ici : la fenêtre du navigateur ne défile
+    // jamais elle-même. Chaque page gère son propre défilement interne dans
+    // la zone <main>, qui reste bornée à la hauteur restante de l'écran.
+    <div className="flex h-screen flex-col overflow-hidden">
+      <header className="flex flex-none items-center justify-between border-b px-4 py-3">
         <NavLink to="/espaces" className="text-lg font-semibold">
           StudyFlow
         </NavLink>
@@ -20,7 +23,7 @@ export function AppLayout() {
           </Button>
         </div>
       </header>
-      <main className="flex-1 p-4 md:p-6">
+      <main className="min-h-0 flex-1 overflow-y-auto p-4 md:p-6">
         <Outlet />
       </main>
     </div>

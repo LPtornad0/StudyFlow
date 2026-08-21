@@ -101,8 +101,12 @@ export function KanbanBoard({
   }
 
   return (
-    <div className="space-y-3">
-      {moveError && <ErrorState message={moveError} />}
+    <div className="flex h-full min-h-0 flex-col gap-3">
+      {moveError && (
+        <div className="flex-none">
+          <ErrorState message={moveError} />
+        </div>
+      )}
 
       <DndContext
         sensors={sensors}
@@ -110,29 +114,31 @@ export function KanbanBoard({
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        {/* Pas d'overflow-x-auto ici : la rangée de listes déborde volontairement
-            pour que ce soit la page entière qui défile horizontalement. */}
-        <div className="flex items-start gap-3 pb-2">
+        {/* overflow-x-auto ici : c'est cette rangée qui défile horizontalement,
+            jamais la page. Chaque colonne défile verticalement en interne. */}
+        <div className="flex h-full min-h-0 flex-1 items-stretch gap-3 overflow-x-auto pb-2">
           {orderedColumns.map((column) => (
-            <div key={column.id} className="w-72 flex-none space-y-2">
-              <KanbanColumn
-                id={column.id}
-                title={column.name}
-                count={(tasksByColumn.get(column.id) ?? []).length}
-              >
-                <SortableContext
-                  items={(tasksByColumn.get(column.id) ?? []).map((t) => t.id)}
-                  strategy={verticalListSortingStrategy}
+            <div key={column.id} className="flex h-full w-72 flex-none flex-col gap-2">
+              <div className="min-h-0 flex-1">
+                <KanbanColumn
+                  id={column.id}
+                  title={column.name}
+                  count={(tasksByColumn.get(column.id) ?? []).length}
                 >
-                  {(tasksByColumn.get(column.id) ?? []).map((task) => (
-                    <TaskCard key={task.id} task={task} onOpen={openEditDialog} />
-                  ))}
-                </SortableContext>
-              </KanbanColumn>
+                  <SortableContext
+                    items={(tasksByColumn.get(column.id) ?? []).map((t) => t.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {(tasksByColumn.get(column.id) ?? []).map((task) => (
+                      <TaskCard key={task.id} task={task} onOpen={openEditDialog} />
+                    ))}
+                  </SortableContext>
+                </KanbanColumn>
+              </div>
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-full"
+                className="w-full flex-none"
                 onClick={() => openCreateDialog(column.id)}
                 aria-label={`Ajouter une tâche dans la liste ${column.name}`}
               >
@@ -141,7 +147,7 @@ export function KanbanBoard({
             </div>
           ))}
 
-          <div className="w-72 flex-none">
+          <div className="w-72 flex-none self-start">
             <AddColumnForm onAdd={onAddColumn} />
           </div>
         </div>

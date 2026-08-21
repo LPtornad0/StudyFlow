@@ -33,12 +33,11 @@ export function ProjectBoardPage() {
   if (columnsError) return <ErrorState message={columnsError} />;
 
   return (
-    <div className="space-y-6">
-      {/* Cette rangée n'a jamais de padding conditionnel : elle ne bouge donc
-          jamais, que le panneau soit affiché ou masqué. Le bouton n'apparaît
-          ici que lorsque le panneau est masqué ; sinon on ferme via la croix
-          affichée directement dans l'en-tête du panneau. */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
+    // Hauteur bornée à l'écran (viewport moins l'en-tête de l'appli) + overflow
+    // masqué : la page elle-même ne défile jamais, tout le défilement se fait
+    // à l'intérieur (rangée de listes à l'horizontale, chaque liste à la verticale).
+    <div className="flex h-[calc(100vh-6rem)] flex-col gap-4 overflow-hidden">
+      <div className="flex flex-none flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-semibold">Tableau Kanban</h1>
         {!showWorkload && (
           <Button variant="outline" size="sm" onClick={() => setShowWorkload(true)}>
@@ -47,7 +46,7 @@ export function ProjectBoardPage() {
         )}
       </div>
 
-      <div className={cn(showWorkload && "md:pr-[21rem]")}>
+      <div className={cn("min-h-0 flex-1 overflow-hidden", showWorkload && "md:pr-[21rem]")}>
         <KanbanBoard
           tasks={tasks}
           columns={columns}
