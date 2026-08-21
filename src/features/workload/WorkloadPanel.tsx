@@ -1,16 +1,27 @@
+import { X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Task } from "@/types/domain";
 import { useWorkload } from "./useWorkload";
 import { formatMinutes } from "@/lib/utils/date";
 
-export function WorkloadPanel({ tasks }: { tasks: Task[] }) {
+export function WorkloadPanel({ tasks, onClose }: { tasks: Task[]; onClose?: () => void }) {
   const { summary, assumptions } = useWorkload(tasks);
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <CardTitle>Charge de travail estimée</CardTitle>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Masquer la charge de travail"
+            className="rounded-sm p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
       </CardHeader>
       <CardContent className="space-y-3">
         <p className="text-sm font-medium">{summary.message}</p>

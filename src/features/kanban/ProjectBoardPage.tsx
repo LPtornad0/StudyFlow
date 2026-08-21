@@ -34,13 +34,17 @@ export function ProjectBoardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Cette rangée n'a jamais de padding conditionnel : le bouton reste donc
-          toujours au même endroit, que le panneau soit affiché ou masqué. */}
+      {/* Cette rangée n'a jamais de padding conditionnel : elle ne bouge donc
+          jamais, que le panneau soit affiché ou masqué. Le bouton n'apparaît
+          ici que lorsque le panneau est masqué ; sinon on ferme via la croix
+          affichée directement dans l'en-tête du panneau. */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-semibold">Tableau Kanban</h1>
-        <Button variant="outline" size="sm" onClick={() => setShowWorkload((v) => !v)}>
-          {showWorkload ? "Masquer la charge de travail" : "Afficher la charge de travail"}
-        </Button>
+        {!showWorkload && (
+          <Button variant="outline" size="sm" onClick={() => setShowWorkload(true)}>
+            Afficher la charge de travail
+          </Button>
+        )}
       </div>
 
       <div className={cn(showWorkload && "md:pr-[21rem]")}>
@@ -58,7 +62,7 @@ export function ProjectBoardPage() {
       {showWorkload && (
         <div className="fixed right-4 top-20 z-10 hidden w-80 md:block">
           <div className="max-h-[calc(100vh-6rem)] overflow-y-auto pr-1">
-            <WorkloadPanel tasks={tasks} />
+            <WorkloadPanel tasks={tasks} onClose={() => setShowWorkload(false)} />
           </div>
         </div>
       )}
