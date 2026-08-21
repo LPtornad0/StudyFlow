@@ -25,6 +25,7 @@ export function ProjectBoardPage() {
     loading: columnsLoading,
     error: columnsError,
     addColumn,
+    reorderColumns,
   } = useBoardColumns(projectId);
   const [showWorkload, setShowWorkload] = useState(true);
 
@@ -33,9 +34,6 @@ export function ProjectBoardPage() {
   if (columnsError) return <ErrorState message={columnsError} />;
 
   return (
-    // h-full (et non une hauteur en vh calculée à la main) : la page colle
-    // exactement à l'espace que <main> lui laisse déjà, sans jamais le
-    // dépasser d'un pixel — donc aucune barre de défilement résiduelle.
     <div className="flex h-full flex-col gap-4 overflow-hidden">
       <div className="flex flex-none flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-semibold">Tableau Kanban</h1>
@@ -55,6 +53,7 @@ export function ProjectBoardPage() {
           onDelete={deleteTask}
           onMove={moveTask}
           onAddColumn={addColumn}
+          onReorderColumns={reorderColumns}
         />
       </div>
 

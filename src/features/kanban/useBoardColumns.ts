@@ -52,5 +52,38 @@ export function useBoardColumns(projectId: string | undefined) {
     return { error: null };
   }
 
-  return { columns, loading, error, addColumn, refetch: fetchColumns };
+  /**
+   * Réordonne les listes du tableau selon l'ordre d'identifiants fourni
+   * (obtenu par glisser-déposer côté UI) et persiste la nouvelle position de
+   * chaque liste via des mises à jour individuelles (pas d'upsert, pour les
+   * mêmes raisons que pour les tâches : éviter les colonnes obligatoires).
+   */
+  async function reorderColumns(orderedIds: string[]): Promise<{ error: string | null }> {
+    const previous = columns;
+
+    const reordered = orderedIds
+      .map((id, index) => {
+        const column = columns.find((c) => c.id === id);
+        return column ? { ...column, position: index } : null;
+      })
+      .filter((c): c is BoardColumn => c !== null);
+
+    if (reordered.length !== columns.length) return { error: null };
+
+    setColumns(reordered);
+
+    const results = await Promise.all(
+      reordered.map((c) => supabase.from("board_columns").update({ position: c.position }).eq("id", c.id))
+    );
+    const failed = results.find((r) => r.error);
+
+    if (failed?.error) {
+      console.error("Erreur de réorganisation des listes :", failed.error);
+      setColumns(previous);
+      return { error: "Le réordonnancement des listes a échoué. Ordre restauré." };
+    }
+    return { error: null };
+  }
+
+  return { columns, loading, error, addColumn, reorderColumns, refetch: fetchColumns };
 }

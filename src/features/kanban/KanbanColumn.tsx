@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { HTMLAttributes, ReactNode } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { cn } from "@/lib/utils/cn";
 
@@ -7,11 +7,13 @@ export function KanbanColumn({
   title,
   count,
   children,
+  headerHandleProps,
 }: {
   id: string;
   title: string;
   count: number;
   children: ReactNode;
+  headerHandleProps?: HTMLAttributes<HTMLDivElement>;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id });
 
@@ -23,7 +25,13 @@ export function KanbanColumn({
         isOver && "bg-accent"
       )}
     >
-      <div className="flex flex-none items-center justify-between px-1">
+      <div
+        className={cn(
+          "flex flex-none items-center justify-between px-1",
+          headerHandleProps && "cursor-grab touch-none active:cursor-grabbing"
+        )}
+        {...headerHandleProps}
+      >
         <h2 className="text-sm font-semibold">{title}</h2>
         <span className="text-xs text-muted-foreground">{count}</span>
       </div>
